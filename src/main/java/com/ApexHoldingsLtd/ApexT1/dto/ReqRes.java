@@ -18,6 +18,8 @@ public class ReqRes {
     private String token;
     private String refreshToken;
     private String expirationTime;
+
+    // User details
     private String name;
     private String userid;
     private String designation;
@@ -25,7 +27,13 @@ public class ReqRes {
     private String role;
     private String email;
     private String password;
+
+    // User and user list
     private OurUsers ourUsers;
     private List<OurUsers> ourUsersList;
+
+    // Pagination details
+    private long totalElements; // Total number of elements
+    private int totalPages;     // Total number of pages
 
 }

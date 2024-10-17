@@ -6,6 +6,11 @@ import com.ApexHoldingsLtd.ApexT1.entity.OurUsers;
 import com.ApexHoldingsLtd.ApexT1.repository.UsersRepo;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,9 +64,9 @@ public class UsersManagementService {
         ReqRes response = new ReqRes();
         try {
             authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
+                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUserid(),
                             loginRequest.getPassword()));
-            var user = usersRepo.findByEmail(loginRequest.getEmail()).orElseThrow();
+            var user = usersRepo.findByUserid(loginRequest.getUserid()).orElseThrow();
             var jwt = jwtUtils.generateToken(user);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             response.setStatusCode(200);
@@ -85,8 +90,8 @@ public class UsersManagementService {
     public ReqRes refreshToken(ReqRes refreshTokenReqiest){
         ReqRes response = new ReqRes();
         try{
-            String ourEmail = jwtUtils.extractUsername(refreshTokenReqiest.getToken());
-            OurUsers users = usersRepo.findByEmail(ourEmail).orElseThrow();
+            String ourUserid = jwtUtils.extractUsername(refreshTokenReqiest.getToken());
+            OurUsers users = usersRepo.findByUserid(ourUserid).orElseThrow();
             if (jwtUtils.isTokenValid(refreshTokenReqiest.getToken(), users)) {
                 var jwt = jwtUtils.generateToken(users);
                 response.setStatusCode(200);
@@ -104,6 +109,40 @@ public class UsersManagementService {
             return response;
         }
     }
+
+    public ReqRes getUsersWithPaginationAndSorting(int page, int size, String sortBy, String search) {
+        ReqRes reqRes = new ReqRes();
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+            Specification<OurUsers> spec = (root, query, criteriaBuilder) -> {
+                if (search != null && !search.isEmpty()) {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.like(root.get("name"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("email"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("userid"), "%" + search + "%")
+                    );
+                }
+                return criteriaBuilder.conjunction(); // return true if no search is provided
+            };
+
+            Page<OurUsers> usersPage = usersRepo.findAll(spec, pageable);
+            if (usersPage.hasContent()) {
+                reqRes.setOurUsersList(usersPage.getContent());
+                reqRes.setStatusCode(200);
+                reqRes.setMessage("Users retrieved successfully");
+                reqRes.setTotalElements(usersPage.getTotalElements());
+                reqRes.setTotalPages(usersPage.getTotalPages());
+            } else {
+                reqRes.setStatusCode(404);
+                reqRes.setMessage("No users found");
+            }
+        } catch (Exception e) {
+            reqRes.setStatusCode(500);
+            reqRes.setMessage("Error occurred: " + e.getMessage());
+        }
+        return reqRes;
+    }
+
 
 
     public ReqRes getAllUsers() {
@@ -198,10 +237,10 @@ public class UsersManagementService {
     }
 
 
-    public ReqRes getMyInfo(String email){
+    public ReqRes getMyInfo(String userid){
         ReqRes reqRes = new ReqRes();
         try {
-            Optional<OurUsers> userOptional = usersRepo.findByEmail(email);
+            Optional<OurUsers> userOptional = usersRepo.findByUserid(userid);
             if (userOptional.isPresent()) {
                 reqRes.setOurUsers(userOptional.get());
                 reqRes.setStatusCode(200);

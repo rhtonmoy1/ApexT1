@@ -49,14 +49,23 @@ public class UserManagementController {
     @GetMapping("/adminuser/get-profile")
     public ResponseEntity<ReqRes> getMyProfile(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        ReqRes response = usersManagementService.getMyInfo(email);
+        String userid = authentication.getName();
+        ReqRes response = usersManagementService.getMyInfo(userid);
         return  ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @DeleteMapping("/admin/delete/{userId}")
     public ResponseEntity<ReqRes> deleteUSer(@PathVariable Integer userId){
         return ResponseEntity.ok(usersManagementService.deleteUser(userId));
+    }
+
+    @GetMapping("/admin/get-users")
+    public ResponseEntity<ReqRes> getUsersWithPaginationAndSorting(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(usersManagementService.getUsersWithPaginationAndSorting(page, size, sortBy, search));
     }
 
 
