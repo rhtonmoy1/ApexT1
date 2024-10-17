@@ -21,6 +21,7 @@ public class ReqRes {
     private String name;
     private String userid;
     private String designation;
+    private String deptmstcode;
     private String role;
     private String email;
     private String password;

@@ -23,6 +23,7 @@ public class OurUsers implements UserDetails {
     private String userid;
     private String password;
     private String designation;
+    private String deptmstcode;
     private String role;
 
     @Override
