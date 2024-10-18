@@ -119,6 +119,8 @@ public class UsersManagementService {
                     return criteriaBuilder.or(
                             criteriaBuilder.like(root.get("name"), "%" + search + "%"),
                             criteriaBuilder.like(root.get("email"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("designation"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("deptmstcode"), "%" + search + "%"),
                             criteriaBuilder.like(root.get("userid"), "%" + search + "%")
                     );
                 }
